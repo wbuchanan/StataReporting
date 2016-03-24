@@ -1,0 +1,578 @@
+Title
+
+    [P] smcl -- Stata Markup and Control Language
+
+
+Description
+
+    SMCL, which stands for Stata Markup and Control Language and is pronounced "smickle", is Stata's output language.  SMCL directives, such as "{it:...}" in
+
+            You can output {it:italics} using SMCL
+
+    affect how output appears:
+
+            You can output italics using SMCL
+
+    All Stata output is processed by SMCL: help files, statistical results, and even the output of display in the programs you write.
+
+
+Remarks
+
+    Remarks are presented under the following headings:
+
+        SMCL modes
+        Command summary -- general syntax
+        Help file preprocessor directive for substituting repeated material
+        Formatting directives for use in line and paragraph modes
+        Link directives for use in line and paragraph modes
+        Formatting directives for use in line mode
+        Formatting directives for use in paragraph mode
+        Inserting values from constant and current-value class
+        Displaying characters using ASCII and extended ASCII codes
+
+
+SMCL modes
+
+    SMCL is always in one of three modes:
+
+                                                                    1.  SMCL line mode     
+                                                                    2.  SMCL paragraph mode
+                                                                    3.  As-is mode         
+
+    Modes 1 and 2 are nearly alike -- in these two modes, SMCL directives are understood, and the modes differ only in how they treat blanks and carriage
+    returns.  In paragraph mode -- so called because it is useful for formatting text into paragraphs -- SMCL joins one line to the next and splits lines to
+    form output with lines that are of nearly equal length.  In line mode, SMCL shows the line much as you entered it.  For instance, in line mode, the input
+    text
+
+        Variable name        mean        standard error
+
+    (which might appear in a help file) would be spaced in the output exactly as you entered it.  In paragraph mode, the above would be output as "Variable
+    name mean standard error", meaning that it would all run together.  On the other hand, the text
+
+        The two main uses of SMCL are in the programs you compose and in the help files you write to document them, although SMCL may be used in any context.
+        Everything Stata displays on the screen is processed by SMCL.
+
+    would display as a nicely formatted paragraph in paragraph mode.
+
+    In mode 3, as-is mode, SMCL directives are not interpreted; text is displayed just as it was entered.  There is seldom need for this mode.
+
+    The directive {smcl} followed by a carriage return signals the beginning of the line and paragraph SMCL modes.  The default SMCL mode is line mode.
+    Paragraph mode is entered using the {p} directive.  SMCL paragraph mode ends, and SMCL line mode is reestablished, when a blank line is encountered or
+    the {p_end} directive is given.
+
+    It is only from line mode that you can get to the other modes.  In addition to the {p} directive for SMCL paragraph mode, there is the {asis} directive
+    that activates the as-is mode.  To return to SMCL mode from these two modes, you must use the {smcl} directive.
+
+
+Command summary -- general syntax
+
+    Pretend that {xyz} is a SMCL directive, although it is not.  {xyz} might have any of the following syntaxes:
+
+                                                                  Syntax 1:  {xyz}          
+                                                                  Syntax 2:  {xyz:text}     
+                                                                  Syntax 3:  {xyz args}     
+                                                                  Syntax 4:  {xyz args:text}
+
+    Syntax 1 means "do whatever it is that {xyz} does".  Syntax 2 means "do whatever it is that {xyz} does, do it on the text text, and then stop doing it".
+    Syntax 3 means "do whatever it is that {xyz} does, as modified by args".  Finally, syntax 4 means "do whatever it is that {xyz} does, as modified by
+    args, do it on the text text, and then stop doing it".
+
+    Not every SMCL directive has all four syntaxes, and which syntaxes are allowed is made clear in the descriptions below.
+
+    In syntaxes 3 and 4, text may contain other SMCL directives.  However, be aware of one important limitation:  not only must the braces match, but they
+    must match on the same physical (input) line.
+
+
+Help file preprocessor directive for substituting repeated material
+
+    INCLUDE help arg follows syntax 3.
+        INCLUDE specifies that SMCL substitute the contents of a file named arg.ihlp.  This is useful when you need to include the same text multiple times.
+
+
+Formatting directives for use in line and paragraph modes
+
+    {sf}, {it}, and {bf} follow syntaxes 1 and 2.
+        These directives specify how the font is to appear.  {sf} indicates standard face, {it} italic face, and {bf} boldface.
+
+        Used in syntax 1, these directives switch to the font face specified, and that rendition will continue to be used until another one of the directives
+        is given.
+
+        Used in syntax 2, they display text in the specified way and then switch the font face back to whatever it was previously.
+
+    {input}, {error}, {result}, and {text} follow syntaxes 1 and 2.
+        These directives specify how the text should be rendered: in the style that indicates user input, an error, a calculated result, or the text around
+        calculated results.
+
+        These styles are often rendered as color.  In the Results window, on a white background, Stata by default shows input in black and bold, error
+        messages in red, calculated results in black and bold, and text in black.  However, the relationship between the real colors and {input}, {error},
+        {result}, and {text} may not be the default (the user could reset it).
+
+    {inp}, {err}, {res}, and {txt} follow syntaxes 1 and 2.
+        These four commands are synonyms for {input}, {error}, {result}, and {text}.
+
+    {cmd} follows syntaxes 1 and 2.
+        {cmd} is similar to the "color" styles and is the recommended way to show Stata commands in help files.  Do not confuse {cmd} with {inp}.  {inp} is
+        the way commands actually typed are shown, and {cmd} is the recommended way you show commands you might type.  We recommend that you present help
+        files in terms of {txt} and use {cmd} to show commands; use any of {sf}, {it}, or {bf} in a help file, but we recommend that you not use any of the
+        "colors" {inp}, {err}, or {res}, except where you are showing actual Stata output.
+
+    {cmdab:text1:text2} follows a variation on syntax 2 (note the double colons).
+        {cmdab} is the recommended way to show minimum abbreviations for Stata commands and options in help files; text1 represents the minimum abbreviation,
+        and text2 represents the rest of the text.  When the entire command or option name is the minimum abbreviation, you may omit text2 along with the
+        extra colon.  {cmdab:text} is then equivalent to {cmd:text}.
+
+    {opt option}, {opt option(arg)}, {opt option(a,b)}, and {opt option(a|b)} follow syntax 3; alternatives to using {cmd}.
+    {opt option1:option2}, {opt option1:option2(arg)}, {opt option1:option2(a,b)}, and {opt option1:option2(a|b)} follow syntaxes 3 and 4; alternatives to
+    using {cmdab}.
+        {opt} is the recommended way to show options.  {opt} allows you to easily include arguments.
+
+  SMCL directive ...         is equivalent to typing ...
+  ----------------------------------------------------------------------------
+  {opt option}               {cmd:option}
+  {opt option(arg)}          {cmd:option(}{it:args}{cmd:)}
+  {opt option(a,b)}          {cmd:option(}{it:a}{cmd:,}{it:b}{cmd:)}
+  {opt option(a|b)}          {cmd:option(}{it:a}|{it:b}{cmd:)}
+
+  {opt option1:option2}      {cmd:option1:option2}
+  {opt option1:option2(arg)} {cmd:option1:option2(}{it:arg}{cmd:)}
+  {opt option1:option2(a,b)} {cmd:option1:option2(}{it:a}{cmd:,}{it:b}{cmd:)}
+  {opt option1:option2(a|b)} {cmd:option1:option2(}{it:a}|{it:b}{cmd:)}
+  ----------------------------------------------------------------------------
+
+        option1 represents the minimum abbreviation, and option2 represents the rest of the text.
+
+        a,b and a|b may have any number of elements.  Available elements that are displayed in {cmd} style are ,, =, :, *, %, and ().  Several elements are
+        displayed in plain text style: |, {}, and [].
+
+        Also {opth option(arg)} is equivalent to {opt}, except that arg is displayed as a link to help; see Link directives for use in line and paragraph
+        modes for more details.
+
+
+    {hilite} and {hi} follow syntaxes 1 and 2.
+        {hilite} and {hi} are synonyms.  {hilite} is the recommended way to highlight (draw attention to) something in help files.  You might highlight, for
+        example, a reference to a manual, the Stata Journal, or a book.
+
+    {ul} follows syntaxes 2 and 3.
+        {ul on} starts underlining mode.  {ul off} ends it.  {ul:text} underlines text.
+
+    {*} follows syntaxes 2 and 4.
+        {*} indicates a comment.  What follows it (inside the braces) is ignored.
+
+    {hline} follows syntaxes 1 and 3.
+        {hline} (syntax 1) draws a horizontal line the rest of the way across the page. {hline #} (syntax 3) draws a horizontal line of # characters.
+        {hline} (either syntax) is generally used in line mode.
+
+    {.-} follows syntax 1.
+        {.-} is a synonym for {hline} (syntax 1).
+
+    {dup #:text} follows syntax 4.
+        {dup} repeats text # times.
+
+    {char code} and {c code} are synonyms and follow syntax 3.
+        These directives display the specified characters which otherwise might be difficult to type on your keyboard.  See Displaying characters using ASCII
+        and extended ASCII codes below.
+
+    {reset} follows syntax 1.
+        {reset} is equivalent to coding {txt}{sf}.
+
+
+Link directives for use in line and paragraph modes
+
+    All the link commands share the feature that when syntax 4 is allowed,
+
+                                                                  Syntax 4:  {xyz args:text}
+
+    then syntax 3 is also allowed,
+
+                                                                  Syntax 3:  {xyz args}     
+
+    and if you specify syntax 3, Stata treats it as if you specified syntax 4, inserting a colon and then repeating the argument.
+
+    The link directives, which may be used in either line mode or paragraph mode, are the following:
+
+    {help args[:text]} follows syntaxes 3 and 4.
+        {help} displays args as a link to help args; see [R] help.  If you also specify the optional :text, text is displayed instead of args, but you are
+        still directed to the help file for args.
+
+    {helpb args[:text]} follows syntaxes 3 and 4.
+        {helpb} is equivalent to {help}, except that args or text is displayed in boldface.
+
+    {manhelp args1 args2[:text]} follows syntaxes 3 and 4.
+        {manhelp} displays [args2] args1 as a link to help args1; thus {manhelp summarize R} would display [R] summarize.  Specifying the optional :text
+        displays text instead of args1, but you are still directed to the help file for args1.
+
+    {manhelpi args1 args2[:text]} follows syntaxes 3 and 4.
+        {manhelpi} is equivalent to {manhelp}, except that args or text is displayed in italics.
+
+    {help args##markername[|viewername][:text]} and {marker markername} follow syntax 3.
+        They let the user jump to a specific location within a file, not just to the top of the file.  {help args##markername} displays args##markername as a
+        link that will jump to the location marked by {marker markername}.  Specifying the optional |viewername will display the results of {marker
+        markername} in a new Viewer window named viewername; _new is a valid viewername that assigns a unique name for the new Viewer.  Specifying the
+        optional :text displays text instead of args##markername.  args represents the name of the file where the {marker} is located.  If args contains
+        spaces, be sure to specify it within quotes.
+
+        We document the directive as {help ...}; however, view, news, net, ado, and update may be used in place of help, although you would probably want to
+        use only help or view.
+
+    {help_d:text} follows syntax 2.
+        {help_d} displays text as a link that will display a help dialog box from which the user may obtain interactive help on any Stata command.
+
+    {newvar[:args]} follows syntaxes 1 and 2.
+        {newvar} displays newvar as a link to help newvar.  If you also specify the optional :args, Stata concatenates args to newvar to display
+        newvar<args>.
+
+    {var[:args]} and {varname[:args]} follow syntaxes 1 and 2.
+        {var} and {varname} display varname as a link to help varname.  If you also specify the optional :args, Stata concatenates args to varname to display
+        varname<args>.
+
+    {vars[:args]} and {varlist[:args]} follow syntaxes 1 and 2.
+        {vars} and {varlist} display varlist as a link to help varlist.  If you also specify the optional :args, Stata concatenates args to varlist to
+        display varlist<args>.
+
+    {depvar[:args]} follows syntaxes 1 and 2.
+        {depvar} displays depvar as a link to help depvar.  If you also specify the optional :args, Stata concatenates args to depvar to display
+        depvar<args>.
+
+    {depvars[:args]} and {depvarlist[:args]} follow syntaxes 1 and 2.
+        {depvars} and {depvarlist} display depvarlist as a link to help depvarlist.  If you also specify the optional :args, Stata concatenates args to
+        depvarlist to display depvarlist<args>.
+
+    {indepvars[:args]} follows syntaxes 1 and 2.
+        {indepvars} displays indepvars as a link to help varlist.  If you also specify the optional :args, Stata concatenates args to indepvars to display
+        indepvars<args>.
+
+    {ifin} follows syntax 1.
+        {ifin} displays [if] and [in], where if is a link to the help for the if qualifier and in is a link to the help for the in qualifier.
+
+    {weight} follows syntax 1.
+        {weight} displays [weight], where weight is a link to the help for the weight specification.
+
+    {dtype} follows syntax 1.
+        {dtype} displays [type], where type is a link to help data types.
+
+    {search args[:text]} follows syntaxes 3 and 4.
+        {search} displays text as a link that will display the results of search on args; see [R] search.
+
+    {search_d:text} follows syntax 2.
+        {search_d} displays text as a link that will display a Keyword Search dialog box from which the user can obtain interactive help by entering keywords
+        of choice.
+
+    {dialog args[:text]} follows syntaxes 3 and 4.
+        {dialog} displays text as a link that will launch the dialog box for args.  args must contain the name of the dialog box and may optionally contain
+        , message(string), where string is the message to be passed to the dialog box.
+
+    {browse args[:text]} follows syntaxes 3 and 4.
+        {browse} displays text as a link that will launch the user's browser pointing at args.  Because args is typically a URL containing a colon, args
+        usually must be specified within quotes.
+
+    {view args[:text]} follows syntaxes 3 and 4.
+        {view} displays text as a link that will present in the Viewer the filename args. If args is a URL, be sure to specify it in quotes.  {view} is
+        seldom used in a SMCL file (such as a help file) because you would seldom know of a fixed location for the file unless it is a URL.  {view} is
+        sometimes used from programs because the program knows the location of the file it created.
+
+        {view} can also be used with {marker}; see above.
+
+    {view_d:text} follows syntax 2.
+        {view_d} displays text as a link that will display the Choose File to View dialog box in which the user may type the name of a file or a URL to be
+        displayed in the Viewer.
+
+    {manpage args[:text]} follows syntaxes 3 and 4.
+        {manpage} displays text as a link that will launch the user's PDF viewer pointing at args.  args are a Stata manual (such as R or SVY) and a page
+        number.  The page number is optional.  If the page number is not specified, the PDF viewer will open to the first page of the file.
+
+    {mansection args[:text]} follows syntaxes 3 and 4.
+        {mansection} displays text as a link that will launch the user's PDF viewer pointing at args.  args are a Stata manual (such as R or SVY) and a named
+        destination within that manual (such as predict or regresspostestimation).  The named destination is optional. If specified, it should consist of no
+        spaces.  If the named destination is not specified, the PDF viewer will open to the first page of the file.
+
+    {manlink man entry} and {manlinki man entry} follow syntax 3.
+        {manlink} and {manlinki} display man and entry using the {mansection} directive as a link that will launch the user's PDF viewer pointing at that
+        manual entry.  man is a Stata manual (such as R or SVY) and entry is the name of an entry within that manual (such as predict or regress
+        postestimation).  The named destination should be written as it appears in the title of the manual entry.
+
+        SMCL directive ...    is equivalent to typing ...
+        ---------------------------------------------------------------------
+        {manlink man entry}   {bf:{mansection man entry_ns:[man] entry}}
+        {manlinki man entry}  {bf:{mansection man entry_ns:[man] {it:entry}}}
+        ---------------------------------------------------------------------
+
+        entry_ns is entry with the following characters removed:  space, left and right quotes (` and '), #, $, ~, {, }, [, and ].
+
+    {news:text} follows syntax 2.
+        {news} displays text as a link that will display in the Viewer the latest news from http://www.stata.com.
+
+        {news} can also be used with {marker}; see above.
+
+    {net args[:text]} follows syntaxes 3 and 4.
+        {net} displays args as a link that will display in the Viewer the results of net args; see [R] net.  Specifying the optional :text, display text
+        instead of args.  For security reasons, net get and net install cannot be executed in this way.  Instead use {net describe ...} to show the page, and
+        from there, the user can click on the appropriate links to install the materials.  Whenever args contains a colon, as it does when args is a URL, be
+        sure to enclose args in quotes.
+
+        {net cd .:text} displays text as a link that will display the contents of the current net location.
+
+        {net} can also be used with {marker}; see above.
+
+    {net_d:text} follows syntax 2.
+        {net_d} displays text as a link that will display a Keyword Search dialog box from which the user can search the Internet for additions to Stata.
+
+    {netfrom_d:text} follows syntax 2.
+        {netfrom_d} displays text as a link that will display a Choose Download Site dialog box into which the user may enter a URL and then see the contents
+        of the site.  This directive is seldom used.
+
+    {ado args[:text]} follows syntaxes 3 and 4.
+        {ado} displays text as a link that will display in the Viewer the results of ado args; see [R] net.  For security reasons, ado uninstall cannot be
+        executed in this way.  Instead use {ado describe ...} to show the package, and from there, the user can click to uninstall (delete) the material.
+
+        {ado} can also be used with {marker}; see above.
+
+    {ado_d:text} follows syntax 2.
+        {ado_d} displays text as a link that will display a Search Installed Programs dialog box from which the user can search for user-written routines
+        previously installed (and uninstall them if desired).
+
+    {update args[:text]} follows syntaxes 3 and 4.
+        {update} displays text as a link that will display in the Viewer the results of update args; see [R] update.  If args contains a URL, be careful to
+        place the args in quotes.
+
+        args can be omitted because the update command is valid without arguments.  {update:text} is really the best way to use the {update} directive
+        because it allows the user to chose whether and from where to update their Stata.
+
+        {update} can also be used with {marker}; see above.
+
+    {update_d:text} follows syntax 2.
+        {update_d} displays text as a link that will display a Choose Official Update Site dialog box into which the user may type a source (typically
+        http://www.stata.com, but perhaps a local CD drive) from which to install official updates to Stata.
+
+    {back:text} follows syntax 2.
+        {back} displays text as a link that will take an action equivalent to pressing the Viewer's Back button.
+
+    {clearmore:text} follows syntax 2.
+        {clearmore} displays text as a link that will take an action equivalent to pressing Stata's Clear -more- Condition button.  {clearmore} is of little
+        use to anyone but the developers of Stata.
+
+    {stata args[:text]} follows syntaxes 3 and 4.
+        {stata} displays text as a link that will execute the Stata command args in the Results window.  Stata will first ask before executing the command
+        that is displayed in a web browser.  If args (the Stata command) contains a colon, remember to enclose the command in quotes.
+
+    {matacmd args[:text]} follows syntaxes 3 and 4.
+        {matacmd} works the same as {stata}, except that it submits a command to Mata.  If Mata is not already active, the command will be prefixed with mata
+        to allow Stata to execute it.
+
+Formatting directives for use in line mode
+
+    {title:text}(carriage return) follows syntax 2.
+        {title:text} displays text as a title.
+
+    {center:text} and {centre:text} follow syntax 2.
+    {center #:text} and {centre #:text} follow syntax 4.
+        {center:text} and {centre:text} are synonyms; they center the text on the line. {center:text} should usually be followed by a carriage return;
+        otherwise, any text that follows it will appear on the same line. With syntax 4, they center the text in a field of width #.
+
+    {rcenter:text} and {rcentre:text} follow syntax 2.
+    {rcenter #:text} and {rcentre #:text} follow syntax 4.
+        {rcenter:text} and {rcentre:text} are synonyms.  {rcenter} is equivalent to {center}, except that text is displayed one space to the right when there
+        are unequal spaces left and right.  {rcenter:text} should be followed by a carriage return; otherwise, any text that follows it will appear on the
+        same line. With syntax 4, they center the text in a field of width #.
+
+    {right:text} follows syntax 2.
+        {right:text} displays text with its last character aligned on the right margin.  {right:text} should be followed by a carriage return.
+
+    {lalign #:text} and {ralign #:text} follow syntax 4.
+        {lalign} left-aligns text in a field # characters wide, and {ralign} right-aligns text in a field # characters wide.
+
+    {dlgtab [# [#]]:text} follows syntaxes 2 and 4.
+        {dlgtab} displays text as a dialog tab.  The first # specifies how many characters to indent the dialog tab from the left-hand side, and the second #
+        specifies how much to indent from the right-hand side.  The default is {dlgtab 4 2:text}.
+
+    {...} follows syntax 1.
+        {...} specifies that the next carriage return be treated as a blank.
+
+    {col #} follows syntax 3.
+        {col #} skips forward to column #.  If you are already at or beyond that column in the output, then {col #} does nothing.
+
+    {space #} follows syntax 3.
+        {space #} is equivalent to typing # blank characters.
+
+    {tab} follows syntax 1.
+        {tab} has the same effect as typing a tab character.  Tab stops are set every eight spaces.
+
+        Note:  SMCL also understands tab characters and treats them the same as the {tab} command, so you may include tabs in your files.
+
+
+Formatting directives for use in paragraph mode
+
+    {p} follows syntax 3.  The full syntax is {p # # # #}.
+        {p # # # #} enters paragraph mode.  The first # specifies how many characters to indent the first line; the second #, how much to indent the second
+        and subsequent lines; the third #, how much to bring in the right margin on all lines; and the fourth # is the total width for the paragraph.
+        Numbers, if not specified, default to zero, so typing {p} without numbers is equivalent to typing {p 0 0 0 0}, {p #} is equivalent to {p # 0 0 0},
+        and so on.  A zero for the fourth # means use the default paragraph width; see linesize.  {p} (with or without numbers) may be followed by a carriage
+        return or not; it makes no difference.
+
+        Paragraph mode ends when a blank line is encountered, the {p_end} directive is encountered, or {smcl}(carriage return) is encountered.
+
+        Several shortcut directives have also been added for commonly used paragraph mode settings:
+
+              SMCL directive ...   is equivalent to typing ...
+              ---------------------------------------------------------------------------------------------------------------------------------
+              {pstd}               {p 4 4 2}
+              {psee}               {p 4 13 2}
+              {phang}              {p 4 8 2}
+              {pmore}              {p 8 8 2}
+              {pin}                {p 8 8 2}
+              {phang2}             {p 8 12 2}
+              {pmore2}             {p 12 12 2}
+              {pin2}               {p 12 12 2}
+              {phang3}             {p 12 16 2}
+              {pmore3}             {p 16 16 2}
+              {pin3}               {p 16 16 2}
+
+    {p_end} follows syntax 1.
+        {p_end} is a way of ending a paragraph without having a blank line between paragraphs.  {p_end} may be followed by a carriage return or not; it will
+        make no difference in the output.
+
+    {p2colset # # # #} follows syntax 3.
+        {p2colset} sets column spacing for a two-column table.  The first # specifies the beginning position of the first column, the second # specifies the
+        placement of the second column, the third # specifies the placement for subsequent lines of the second column, and the last # specifies the number to
+        indent from the right-hand side for the second column.
+
+    {p2col [# # # #]:[first_column_text]} [second_column_text] follows syntaxes 2 and 4.
+        {p2col} specifies the rows that make up the two-column table.  Specifying the optional numbers redefines the numbers specified in {p2colset} for this
+        row only.  If the first_column_text or the second_column_text is not specified, the respective column is left blank.
+
+    {p2line [# #]} follows syntaxes 1 and 3.
+        {p2line} draws a dashed line for use with a two-column table.  The first # specifies the left indentation, and the second # specifies the right
+        indentation.  If no numbers are specified, the defaults are based on the numbers provided in {p2colset}.
+
+    {p2colreset} follows syntax 1.
+        {p2colreset} restores the {p2col} default values.
+
+    {synoptset [#] [tabbed|notes]} follows syntaxes 1 and 3.
+        {synoptset} sets standard column spacing for the two-column tables used to document options in syntax diagrams.  # specifies the width of the first
+        column; the width defaults to 20 if # is not specified.  The optional argument tabbed specifies that the table will contain headings or "tabs" for
+        sets of options.  The optional argument notes specifies that some of the table entries will have footnotes and results in a larger indentation of the
+        first column than the tabbed argument implies.
+
+    {synopthdr[:first_column_header]} follows syntaxes 1 and 2.
+        {synopthdr...} outputs a standard header for a syntax-diagram-option table.  first_column_header is used to title the first column in the header; if
+        first_column_header is not specified then the first column is titled "options".  The second column is always titled "Description".
+
+    {syntab:text} follows syntax 2.
+        {syntab:text} outputs text positioned as a subheading or "tab" in a syntax-diagram-option table.
+
+    {synopt:[first_column_text]}[second_column_text] follows syntax 2.
+        {synopt} specifies the rows that make up the two-column table; it is equivalent to {p2col} (see above).
+
+    {p2coldent:[first_column_text]}[second_column_text] follows syntax 2.
+        {p2coldent...} is the same as {synopt}, except the first_column_text is displayed with the standard indentation (which may be negative).  The
+        second_column_text is displayed in paragraph mode and ends when a blank line, {p_end}, or a carriage return is encountered.  The location of the
+        columns is determined by a prior {synoptset} or {p2colset} directive.
+
+    {synoptline} follows syntax 1.
+        {synoptline} draws a horizontal line that extends to the boundaries of the previous {synoptset} or, less often, {p2colset} directive.
+
+    {bind:text} follows syntax 2.
+        {bind:text} keeps text together on a line, even if that makes one line of the paragraph short.  {bind:text} can also be used to insert one or more
+        real spaces into the paragraph if you specify text as one or more spaces.
+
+    {break} follows syntax 1.
+        {break} forces a line break without ending the paragraph.
+
+Inserting values from constant and current-value class
+
+    The {ccl} directive outputs the value contained in a constant and current-value class (c()) object.  For instance, {ccl pi} provides the value of the
+    constant pi (3.14159...) contained in c(pi).  See [P] creturn for a list of all the available c() objects.
+
+
+Displaying characters using ASCII and extended ASCII codes
+
+    The {char} directive -- synonym {c} -- allows you to output any ASCII or extended ASCII character in Latin1 encoding.  Extended ASCII characters in
+    Latin1 encoding are converted to the equivalent Unicode characters in the UTF-8 encoding.  For instance, {c 232} is equivalent to typing the letter è
+    because extended ASCII code 232 in Latin1 is defined as the letter "e" with a grave accent.  You may also type the Unicode character è (code point
+    \u00e8) directly.
+
+    You can get to all the ASCII and extended ASCII characters in Latin1 encoding by typing {c #}, where # is between 1 and 255.  Or, if you prefer, you can
+    type {c 0x#}, where # is a hexadecimal number between 1 and ff.  Thus {c 0x6a} is also j because the hexadecimal number 6a is equal to the decimal number
+    106.
+
+    Also, so that you do not have to remember the numbers, {c} provides special codes for characters that are, for one reason or another, difficult to type.
+    These include
+
+                                                                {c S|}    $ (dollar sign)      
+                                                                {c 'g}    ` (open single quote)
+                                                                {c -(}    { (left curly brace) 
+                                                                {c )-}    } (right curly brace)
+
+    {c S|} and {c 'g} are included not because they are difficult to type or cause SMCL any problems but because in Stata display statements, they can be
+    difficult to display, since they are Stata's macro substitution characters and tend to be interpreted by Stata.
+
+    {c -(} and {c )-} are included because { and } are used to enclose SMCL directives.  Although { and } have special meaning to SMCL, SMCL usually displays
+    the two characters correctly when they do not have a special meaning.  SMCL follows the rule that, when it does not understand what it thinks ought to be
+    a directive, it shows what it did not understand in unmodified form.
+
+    SMCL also provides the following line-drawing characters:
+
+                                                         {c -}      -, a wide dash character         
+
+                                                         {c |}      |, a tall |                      
+
+                                                         {c +}      +, a wide dash on top of a tall |
+
+                                                         {c TT}     -, a top T                       
+
+                                                         {c BT}     -, a bottom T                    
+
+                                                         {c LT}     |, a left T                      
+
+                                                         {c RT}     |, a right T                     
+
+                                                         {c TLC}    +, a top-left corner             
+
+                                                         {c TRC}    +, a top-right corner            
+
+                                                         {c BRC}    +, a bottom-right corner         
+
+                                                         {c BLC}    +, a bottom-left corner          
+
+    The above are not really ASCII; they are instructions to SMCL to draw lines.  The "characters" are, however, one character wide and one character tall,
+    so you can use them as characters in your output.
+
+    Finally, SMCL provides the following Western European characters:
+
+                                                                  {c a'}   á      {c A'}   Á
+                                                                  {c e'}   é      {c E'}   É
+                                                                  {c i'}   í      {c I'}   Í
+                                                                  {c o'}   ó      {c O'}   Ó
+                                                                  {c u'}   ú      {c U'}   Ú
+
+                                                                  {c a'g}  à      {c A'g}  À
+                                                                  {c e'g}  è      {c E'g}  È
+                                                                  {c i'g}  ì      {c I'g}  Ì
+                                                                  {c o'g}  ò      {c O'g}  Ò
+                                                                  {c u'g}  ù      {c U'g}  Ù
+
+                                                                  {c a^}   â      {c A^}   Â
+                                                                  {c e^}   ê      {c E^}   Ê
+                                                                  {c i^}   î      {c I^}   Î
+                                                                  {c o^}   ô      {c O^}   Ô
+                                                                  {c u^}   û      {c U^}   Û
+
+                                                                  {c a~}   ã      {c A~}   Ã
+                                                                  {c o~}   õ      {c O~}   Õ
+
+                                                                  {c a:}   ä      {c A:}   Ä
+                                                                  {c e:}   ë      {c E:}   Ë
+                                                                  {c i:}   ï      {c I:}   Ï
+                                                                  {c o:}   ö      {c O:}   Ö
+                                                                  {c u:}   ü      {c U:}   Ü
+
+                                                                  {c ae}   æ      {c AE}   Æ
+                                                                  {c c,}   ç      {c C,}   Ç
+                                                                  {c n~}   ñ      {c N~}   Ñ
+                                                                  {c o/}   ø      {c O/}   Ø
+                                                                  {c y'}   ý      {c Y'}   Ý
+
+                                                                  {c y:}   ÿ      {c ss}   ß
+                                                                  {c r?}   ¿      {c r!}   ¡
+                                                                  {c L-}   £      {c Y=}   ¥
+
+    SMCL uses UTF-8 to render the above characters.  For example, {c e'} is equivalent to {c 0xe9}, if you care to look it up.
